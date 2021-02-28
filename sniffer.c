@@ -10,6 +10,8 @@
 #include <arpa/inet.h>
 #include <strings.h>
 #include <string.h>
+#include <linux/ip.h>
+#include <netinet/in.h>
 
 int CreateRawSocket(int protocol_to_sniff)
 {
@@ -119,6 +121,57 @@ int ParseEthernetHeader(unsigned char *packet,int len)
 	/* First 6 Bytes Are Destination  MAC */
 }
 
+int ParseIPHeader(unsigned char *packet,int len)
+{
+	struct ethhdr *ethernet_header;
+	struct iphdr *ip_header;
+	
+/*	struct iphdr {
+		#if defined(__LITTLE_ENDIAN_BITFIELD)
+		        __u8    ihl:4,
+		                version:4;
+		#elif defined (__BIG_ENDIAN_BITFIELD)
+		        __u8    version:4,
+		                ihl:4;
+		#else
+		#error  "Please fix <asm/byteorder.h>"
+		#endif
+		        __u8    tos;
+		        __be16  tot_len;
+		        __be16  id;
+		        __be16  frag_off;
+		        __u8    ttl;
+		        __u8    protocol;
+		        __sum16 check;
+		        __be32  saddr;
+		        __be32  daddr;
+		        //The options start here.
+		};
+*/
+	ethernet_header=(struct ethhdr *)packet;
+
+	if(ntohs(ethernet_header->h_proto) == ETH_P_IP)
+	{
+		if(len >= (sizeof(struct ethhdr)+sizeof(struct iphdr)) )
+		{
+			ip_header=(struct iphdr*)(packet + sizeof(struct ethhdr));
+			struct in_addr dest,source;
+			dest.s_addr = ip_header->daddr;
+			source.s_addr = ip_header->saddr;
+			
+			printf("[+] Destination IP : %s\n", inet_ntoa(dest));
+			printf("[+] Source IP : %s\n",inet_ntoa(source));
+			printf("[+] TTL : %d \n",ip_header->ttl);
+		}
+		else
+		{
+			printf("Full IP Header not found\n");
+		}
+	}
+
+}
+
+
 int main(int argc, char **argv)
 {
 
@@ -157,6 +210,7 @@ int main(int argc, char **argv)
 			/* Packet Received */
 			PrintPacketInHex(packet_buffer, len);
 			ParseEthernetHeader(packet_buffer, len);
+			ParseIPHeader(packet_buffer, len);
 		}
 		
 	}
