@@ -14,289 +14,176 @@
 #include <linux/tcp.h>
 #include <linux/udp.h>
 #include <netinet/in.h>
+#define MTU 65536
 
-int CreateRawSocket(int protocol_to_sniff)
+int PrintInHex(char *mesg, unsigned char *p, int len)
 {
-	int rawsocket;
-	if((rawsocket=socket(PF_PACKET, SOCK_RAW,htons(protocol_to_sniff)))==-1) // Return Socket File Descriptor
-	{
-		perror("Error Creating Socket");
-		exit(-2);
-	}
-	return rawsocket;
+        printf(mesg);
+        while(len--)
+        {
+                printf("%.2X ",*p);
+                p++;
+        }
 }
 
-int BindRawSocketToInterface(char *device, int rawsock,int protocol)
+
+
+int PrintPacketInfo(unsigned char *packet,int len)
 {
-	struct sockaddr_ll sll;
-	struct ifreq ifr; // Stores Information About The Interface To Sniff On
+        struct ethhdr *ethernet_header;
+		struct iphdr *ip_header;
+		struct tcphdr *tcp_header;
+        struct udphdr *udp_header;
+        unsigned char *data;
+        long int data_len;
 
-	bzero(&sll,sizeof(sll));
-	bzero(&ifr,sizeof(ifr));
 
-/* struct ifreq {
-               char ifr_name[IFNAMSIZ]; // Interface Name
-               union {
-                   struct sockaddr ifr_addr;
-                   struct sockaddr ifr_dstaddr;
-                   struct sockaddr ifr_broadaddr;
-                   struct sockaddr ifr_netmask;
-                   struct sockaddr ifr_hwaddr;
-                   short           ifr_flags;
-                   int             ifr_ifindex;
-                   int             ifr_metric;
-                   int             ifr_mtu;
-                   struct ifmap    ifr_map;
-                   char            ifr_slave[IFNAMSIZ];
-                   char            ifr_newname[IFNAMSIZ];
-                   char           *ifr_data;
-               };
-           };
+        if(len>sizeof(struct ethhdr))
+        {
+                ethernet_header=(struct ethhdr *)packet;
+                PrintInHex("[+] Destination MAC : ", ethernet_header-> h_dest,6);
+                printf("\n");
 
-*/
-	/* Copy Device Name To ifr */
-	strncpy((char *)ifr.ifr_name, device,IFNAMSIZ);
+                PrintInHex("[+] Source MAC : ", ethernet_header-> h_source,6);
+                printf("\n");
 
-	if((ioctl(rawsock,SIOCGIFINDEX,&ifr))==-1)//Gets us the interface number of our device
+                PrintInHex("[+] Protocol : ", (void *)&ethernet_header-> h_proto,2);
+                printf("\n");
+
+                if(ntohs(ethernet_header->h_proto) == ETH_P_IP)
+        		{
+	                if(len >= (sizeof(struct ethhdr)+sizeof(struct iphdr)) )
+	                {
+	                        ip_header=(struct iphdr*)(packet + sizeof(struct ethhdr));
+	                        struct in_addr dest,source;
+	                        dest.s_addr = ip_header->daddr;
+	                        source.s_addr = ip_header->saddr;
+
+	                        printf("[+] Destination IP : %s\n", inet_ntoa(dest));
+	                        printf("[+] Source IP : %s\n",inet_ntoa(source));
+	                        printf("[+] TTL : %d \n",ip_header->ttl);
+
+	                        if((len>=(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(struct tcphdr))) && (ip_header->protocol==IPPROTO_TCP))
+	                        {
+       	                        tcp_header=(struct tcphdr*)(packet + sizeof(struct ethhdr)+ip_header->ihl*4);
+       	                        printf("[+] TCP Connection !\n");
+       	                        printf("[+] Source Port : %d\n",ntohs(tcp_header-> source));
+       	                        printf("[+] Dest Port : %d\n",ntohs(tcp_header-> dest));
+
+       	                        data=( packet+sizeof(struct ethhdr)+ip_header->ihl*4+sizeof(struct tcphdr) );
+       	                        data_len=ntohs(ip_header->tot_len)-ip_header->ihl*4-sizeof(struct tcphdr);
+
+       	                        if(data_len)
+       	                        {
+       	                        	printf("[+] Data Length %d\n",data_len);
+       	                        	PrintInHex("[+] Data : ",data,data_len);
+       	                        	return 0;
+       	                        }
+       	                    }
+
+	                        else if((len>=(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(struct tcphdr))) && (ip_header->protocol==IPPROTO_UDP))       	
+   	                        {
+       	                                printf("[+] UDP Connection !\n");
+       	                                udp_header=(struct udphdr*)(packet + sizeof(struct ethhdr)+ip_header->ihl*4);
+       	                                printf("[+] Source Port : %d\n",ntohs(udp_header-> source));
+       	                                printf("[+] Dest Port : %d\n",ntohs(udp_header-> dest));
+       	                                data=(packet+sizeof(struct ethhdr)+ip_header->ihl*4+sizeof(struct udphdr));
+       	                        		data_len=ntohs(ip_header->tot_len)-ip_header->ihl*4-sizeof(struct udphdr);
+       	                        		if(data_len)
+       	                        		{
+       	                        			printf("[+] Data Length %d\n",data_len);
+       	                        			PrintInHex("[+] Data : ",data,data_len);
+       	                        			return 0;
+       	                        		}
+   	                        }
+   	                        
+   	                        else
+   	                        {
+   	                                printf("[-] Not a TCP/UDP PACKET\n");
+   	                                return -3;
+   	                        }
+	                        
+	                }
+	                
+	                else
+	                {
+	                        printf("Full IP Header not found\n");
+	                        return -2;
+	                }
+        		}
+
+		}
+		
+		else
+		{
+			printf("[-] Full Ethernet Header Could Not Be Captured :(\n");
+			return -1;
+		}
+}
+
+void main(int argc, char *argv[])
+{
+	if(argc != 2)
+	{
+		perror("[-] Incorrect Syntax\n[+] Usage : ./sniffer [interface]\n");
+		exit(-1);
+	}
+
+	int raw; // Store Socket File Descriptor
+	unsigned char packet_buffer[MTU];
+	int len;
+	struct sockaddr_ll packet_info, sll;
+	int packet_info_size=sizeof(struct sockaddr_ll);	
+    struct ifreq ifr; // Stores Information About The Interface To Sniff On
+
+	printf("[+] PACKET SNIFFER IN C ! CODED BY @whokilleddb\n\n");
+
+	//Create A Raw Socket;
+	if((raw=socket(PF_PACKET, SOCK_RAW,htons(ETH_P_IP)))==-1) // Return Socket File Descriptor
+    {
+		perror("[-] Error Creating Socket\n");
+		exit(-2);
+	}
+	printf("[+] Successfully Created Raw Socket \n");
+
+	// Bind Socket To Interface
+	memset(&sll,0,sizeof(sll));
+	memset(&ifr,0,sizeof(sll));
+
+	// Copy Device Name To ifr
+	strncpy((char *)ifr.ifr_name,argv[1],IFNAMSIZ);
+	if((ioctl(raw,SIOCGIFINDEX,&ifr))==-1)//Gets us the interface number of our device
 	{
 		perror("[-] Error Getting Interface Name!\n");
 		exit(-3);
 	}
 
-	/* Bind Socket To Interface */
+	// Bind Socket To Interface
 	sll.sll_family=AF_PACKET;
 	sll.sll_ifindex=ifr.ifr_ifindex;
-	sll.sll_protocol=htons(protocol);
+	sll.sll_protocol=htons(ETH_P_IP);
 
-	if (( bind(rawsock,( struct  sockaddr *)&sll, sizeof(sll) ))==-1 )
+	if (( bind(raw,(struct  sockaddr *)&sll, sizeof(sll)))==-1 )
 	{
-		perror("[-] Cannot Bind Socket To Interface \n");
-		exit(-4);
+	        perror("[-] Cannot Bind Socket To Interface \n");
+	        exit(-4);
 	}
+	printf("[+] Successfully Bounded Raw Socket To %s\n",argv[1]);
 
-	return 0;
-}
-
-int PrintPacketInHex(unsigned char *packet,int len)
-{
-	unsigned char *p =packet;
-	printf("\n\n-----------------Packet Begins-----------------\n\n");
-	while(len --)
+	while(1)
 	{
-		printf("%.2x",*p);
-		p++;
-	}
-
-	printf("\n\n------------------Packet Ends------------------\n");
-}
-
-int PrintInHex(char *mesg, unsigned char *p, int len)
-{
-	printf(mesg);
-	while(len--)
-	{
-		printf("%.2X ",*p);
-		p++;
-	}
-}
-
-int ParseEthernetHeader(unsigned char *packet,int len)
-{
-	struct ethhdr *ethernet_header;
-
-	if(len>sizeof(struct ethhdr))
-	{
-		ethernet_header=(struct ethhdr *)packet;
-		PrintInHex("[+] Destination MAC : ", ethernet_header-> h_dest,6);
-		printf("\n");
-
-		PrintInHex("[+] Source MAC : ", ethernet_header-> h_source,6);
-		printf("\n");
-
-		PrintInHex("[+] Protocol : ", (void *)&ethernet_header-> h_proto,2);
-		printf("\n");
-
-
-
-
-	}
-	/* First 6 Bytes Are Destination  MAC */
-}
-
-int ParseIPHeader(unsigned char *packet,int len)
-{
-	struct ethhdr *ethernet_header;
-	struct iphdr *ip_header;
-	
-/*	struct iphdr {
-		#if defined(__LITTLE_ENDIAN_BITFIELD)
-		        __u8    ihl:4,
-		                version:4;
-		#elif defined (__BIG_ENDIAN_BITFIELD)
-		        __u8    version:4,
-		                ihl:4;
-		#else
-		#error  "Please fix <asm/byteorder.h>"
-		#endif
-		        __u8    tos;
-		        __be16  tot_len;
-		        __be16  id;
-		        __be16  frag_off;
-		        __u8    ttl;
-		        __u8    protocol;
-		        __sum16 check;
-		        __be32  saddr;
-		        __be32  daddr;
-		        //The options start here.
-		};
-*/
-	ethernet_header=(struct ethhdr *)packet;
-
-	if(ntohs(ethernet_header->h_proto) == ETH_P_IP)
-	{
-		if(len >= (sizeof(struct ethhdr)+sizeof(struct iphdr)) )
-		{
-			ip_header=(struct iphdr*)(packet + sizeof(struct ethhdr));
-			struct in_addr dest,source;
-			dest.s_addr = ip_header->daddr;
-			source.s_addr = ip_header->saddr;
-			
-			printf("[+] Destination IP : %s\n", inet_ntoa(dest));
-			printf("[+] Source IP : %s\n",inet_ntoa(source));
-			printf("[+] TTL : %d \n",ip_header->ttl);
-		}
-		else
-		{
-			printf("Full IP Header not found\n");
-		}
-	}
-
-}
-
-int ParseTCPHeader(unsigned char *packet,int len)
-{
-	struct ethhdr *ethernet_header;
-	struct iphdr *ip_header;
-	struct tcphdr *tcp_header;
-	struct udphdr *udp_header;
-
-
-	/*struct tcphdr {
-	        __be16  source;
-	        __be16  dest;
-	        __be32  seq;
-	        __be32  ack_seq;
-	#if defined(__LITTLE_ENDIAN_BITFIELD)
-	        __u16   res1:4,
-	                doff:4,
-	                fin:1,
-	                syn:1,
-	                rst:1,
-	                psh:1,
-	                ack:1,
-	                urg:1,
-	                ece:1,
-	                cwr:1;
-	#elif defined(__BIG_ENDIAN_BITFIELD)
-	        __u16   doff:4,
-	                res1:4,
-	                cwr:1,
-	                ece:1,
-	                urg:1,
-	                ack:1,
-	                psh:1,
-	                rst:1,
-	                syn:1,
-	                fin:1;
-	#else
-	#error  "Adjust your <asm/byteorder.h> defines"
-	#endif  
-	        __be16  window;
-	        __sum16 check;
-	        __be16  urg_ptr;
-	};*/
-
-
-	/* Check If There Are Enough Bytes Captured For TCP */
-	if(len>=(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(struct tcphdr)))
-	{
-		ethernet_header=(struct ethhdr *)packet;
-
-		if(ntohs(ethernet_header->h_proto) == ETH_P_IP)
-		{
-			ip_header=(struct iphdr*)(packet + sizeof(struct ethhdr));
-			
-			if(ip_header->protocol==IPPROTO_TCP)
-			{
-			tcp_header=(struct tcphdr*)(packet + sizeof(struct ethhdr)+ip_header->ihl*4);
-			printf("[+] TCP Connection !\n");
-			printf("[+] Source Port : %d\n",ntohs(tcp_header-> source));
-			printf("[+] Dest Port : %d\n",ntohs(tcp_header-> dest));
-			}
-
-			else if(ip_header->protocol==IPPROTO_UDP)
-			{
-				printf("[+] UDP Connection !\n");
-				udp_header=(struct udphdr*)(packet + sizeof(struct ethhdr)+ip_header->ihl*4);
-				printf("[+] Source Port : %d\n",ntohs(udp_header-> source));
-				printf("[+] Dest Port : %d\n",ntohs(udp_header-> dest));
-			}			
-			else
-			{
-				printf("[-] Not a TCP/UDP PACKET\n");
-			}
-		}
-
-	}
-
-}
-
-
-int main(int argc, char **argv)
-{
-
-	if(argc!=3)
-	{
-		perror("[-] Incorrect Syntax\n");
-		perror("[-] Syntax : ./sniffer [INTERFACE] [NUMBER OF PACKETS TO SNIFF]\n");
-		exit(-1);
-	}
-	
-	int raw;
-	unsigned char packet_buffer[2048];
-	int len;
-	int packets_to_sniff;
-	struct sockaddr_ll packet_info;
-	int packet_info_size=sizeof(packet_info);
-
-	/* Create A Raw Socket */	
-	raw = CreateRawSocket(ETH_P_IP);
-
-	/* Bind Socket To An Interface */
-	BindRawSocketToInterface(argv[1],raw,ETH_P_IP);
-
-	/* Get Number Of Packets To Sniff From User */
-	packets_to_sniff=atoi(argv[2]);
-
-	/* Start Sniffing And Print Hex Values */
-	while(packets_to_sniff--)
-	{
-		if((len=recvfrom(raw,packet_buffer,2048,0,(struct sockaddr*)&packet_info, &packet_info_size)) == -1)
+		if((len=recvfrom(raw,packet_buffer,sizeof(packet_buffer),0,(struct sockaddr*)&packet_info, &packet_info_size)) == -1)
 		{
 			perror("[-] Function recvfrom() returned exit status -1\n");
-			exit(-1);
-		}
-		
+			exit(-1);	
+		}	
 		else
 		{
-			/* Packet Received */
-			PrintPacketInHex(packet_buffer, len);
-			ParseEthernetHeader(packet_buffer, len);
-			ParseIPHeader(packet_buffer, len);
-			ParseTCPHeader(packet_buffer, len);
+			printf("\n\n-----------------Packet Begins-----------------\n\n");
+			PrintPacketInfo(packet_buffer, len);
+			printf("\n\n------------------Packet Ends------------------\n");
+			
 		}
-		
 	}
 
-	return 0;
 }
