@@ -16,7 +16,7 @@
 int CreateRawSocket(int protocol_to_sniff)
 {
 	int rawsocket;
-	if((rawsocket=socket(PF_PACKET, SOCK_RAW,htons(protocol_to_sniff)))==-1)
+	if((rawsocket=socket(PF_PACKET, SOCK_RAW,htons(protocol_to_sniff)))==-1) // Return Socket File Descriptor
 	{
 		perror("Error Creating Socket");
 		exit(-2);
@@ -177,9 +177,11 @@ int main(int argc, char **argv)
 
 	if(argc!=3)
 	{
-		perror("[-] Wrong Usage\n");
-		exit(-99);
+		perror("[-] Incorrect Syntax\n");
+		perror("[-] Syntax : ./sniffer [INTERFACE] [NUMBER OF PACKETS TO SNIFF]\n");
+		exit(-1);
 	}
+	
 	int raw;
 	unsigned char packet_buffer[2048];
 	int len;
