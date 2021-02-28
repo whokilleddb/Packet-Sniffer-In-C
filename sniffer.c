@@ -11,6 +11,8 @@
 #include <strings.h>
 #include <string.h>
 #include <linux/ip.h>
+#include <linux/tcp.h>
+#include <linux/udp.h>
 #include <netinet/in.h>
 
 int CreateRawSocket(int protocol_to_sniff)
@@ -171,6 +173,84 @@ int ParseIPHeader(unsigned char *packet,int len)
 
 }
 
+int ParseTCPHeader(unsigned char *packet,int len)
+{
+	struct ethhdr *ethernet_header;
+	struct iphdr *ip_header;
+	struct tcphdr *tcp_header;
+	struct udphdr *udp_header;
+
+
+	/*struct tcphdr {
+	        __be16  source;
+	        __be16  dest;
+	        __be32  seq;
+	        __be32  ack_seq;
+	#if defined(__LITTLE_ENDIAN_BITFIELD)
+	        __u16   res1:4,
+	                doff:4,
+	                fin:1,
+	                syn:1,
+	                rst:1,
+	                psh:1,
+	                ack:1,
+	                urg:1,
+	                ece:1,
+	                cwr:1;
+	#elif defined(__BIG_ENDIAN_BITFIELD)
+	        __u16   doff:4,
+	                res1:4,
+	                cwr:1,
+	                ece:1,
+	                urg:1,
+	                ack:1,
+	                psh:1,
+	                rst:1,
+	                syn:1,
+	                fin:1;
+	#else
+	#error  "Adjust your <asm/byteorder.h> defines"
+	#endif  
+	        __be16  window;
+	        __sum16 check;
+	        __be16  urg_ptr;
+	};*/
+
+
+	/* Check If There Are Enough Bytes Captured For TCP */
+	if(len>=(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(struct tcphdr)))
+	{
+		ethernet_header=(struct ethhdr *)packet;
+
+		if(ntohs(ethernet_header->h_proto) == ETH_P_IP)
+		{
+			ip_header=(struct iphdr*)(packet + sizeof(struct ethhdr));
+			
+			if(ip_header->protocol==IPPROTO_TCP)
+			{
+			tcp_header=(struct tcphdr*)(packet + sizeof(struct ethhdr)+ip_header->ihl*4);
+			printf("[+] TCP Connection !\n");
+			printf("[+] Source Port : %d\n",ntohs(tcp_header-> source));
+			printf("[+] Dest Port : %d\n",ntohs(tcp_header-> dest));
+			}
+
+			else if(ip_header->protocol==IPPROTO_UDP)
+			{
+				printf("[+] UDP Connection !\n");
+				udp_header=(struct udphdr*)(packet + sizeof(struct ethhdr)+ip_header->ihl*4);
+				printf("[+] Source Port : %d\n",ntohs(udp_header-> source));
+				printf("[+] Dest Port : %d\n",ntohs(udp_header-> dest));
+			}			
+			else
+			{
+				printf("[-] Not a TCP/UDP PACKET\n");
+			}
+		}
+
+	}
+
+}
+
 
 int main(int argc, char **argv)
 {
@@ -213,6 +293,7 @@ int main(int argc, char **argv)
 			PrintPacketInHex(packet_buffer, len);
 			ParseEthernetHeader(packet_buffer, len);
 			ParseIPHeader(packet_buffer, len);
+			ParseTCPHeader(packet_buffer, len);
 		}
 		
 	}
