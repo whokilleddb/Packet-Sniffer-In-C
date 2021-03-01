@@ -27,7 +27,6 @@ int PrintInHex(char *mesg, unsigned char *p, int len)
 }
 
 
-
 int PrintPacketInfo(unsigned char *packet,int len)
 {
         struct ethhdr *ethernet_header;
@@ -48,7 +47,7 @@ int PrintPacketInfo(unsigned char *packet,int len)
                 printf("\n");
 
                 PrintInHex("[+] Protocol : ", (void *)&ethernet_header-> h_proto,2);
-                printf("\n");
+                printf("\n\n");
 
                 if(ntohs(ethernet_header->h_proto) == ETH_P_IP)
         		{
@@ -61,7 +60,7 @@ int PrintPacketInfo(unsigned char *packet,int len)
 
 	                        printf("[+] Destination IP : %s\n", inet_ntoa(dest));
 	                        printf("[+] Source IP : %s\n",inet_ntoa(source));
-	                        printf("[+] TTL : %d \n",ip_header->ttl);
+	                        printf("[+] TTL : %d \n\n",ip_header->ttl);
 
 	                        if((len>=(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(struct tcphdr))) && (ip_header->protocol==IPPROTO_TCP))
 	                        {
@@ -70,6 +69,10 @@ int PrintPacketInfo(unsigned char *packet,int len)
        	                        printf("[+] Source Port : %d\n",ntohs(tcp_header-> source));
        	                        printf("[+] Dest Port : %d\n",ntohs(tcp_header-> dest));
 
+								printf("[+] Syn Flag : %d\n",tcp_header->syn);
+								printf("[+] Ack Flag : %d\n",tcp_header->ack);
+								printf("[+] Fin Flag : %d\n\n",tcp_header->fin);
+									                        
        	                        data=( packet+sizeof(struct ethhdr)+ip_header->ihl*4+sizeof(struct tcphdr) );
        	                        data_len=ntohs(ip_header->tot_len)-ip_header->ihl*4-sizeof(struct tcphdr);
 
