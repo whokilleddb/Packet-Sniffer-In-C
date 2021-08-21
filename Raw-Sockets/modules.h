@@ -8,6 +8,14 @@
 #define MAGENTA(string) "\x1b[35m" string "\x1b[0m"
 #define CYAN(string)    "\x1b[36m" string "\x1b[0m"
 
+int CHECK_WIRELESS()
+{
+    
+    return 0;
+}
+
+/*List all available network interfaces
+*/
 int GET_INTERFACES()
 {
     struct ifaddrs *addresses;
