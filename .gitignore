@@ -4,3 +4,6 @@ sniffer*
 # Test Files
 *test*
 a.out
+
+# VSCode files
+.vscode/
