@@ -8,14 +8,42 @@
 #define MAGENTA(string) "\x1b[35m" string "\x1b[0m"
 #define CYAN(string)    "\x1b[36m" string "\x1b[0m"
 
-int CHECK_WIRELESS()
+int CHECK_WIRELESS(const char* ifname, char* protocol)
 {
+    int sock = -1;
+    struct iwreq pwrq;
+    memset(&pwrq, 0, sizeof(pwrq));
+    strncpy(pwrq.ifr_name, ifname, IFNAMSIZ);
     
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
+    {
+        fprintf(stderr,"["RED("-")"]" "Socket Initialization Failed\n");
+        return 0;
+    }
+
+    /*ioctl(fd, SIOCGIWNAME) returns the wireless extension protocol version, which is only available on interfaces that are wireless
+    
+    Definition:
+    #define SIOCGIWNAME 0x8B01 -> get name == wireless protocol
+    
+    SIOCGIWNAME is used to verify the presence of Wireless Extensions.
+    Common values : "IEEE 802.11-DS", "IEEE 802.11-FH", "IEEE 802.11b"
+    */
+
+    if (ioctl(sock, SIOCGIWNAME, &pwrq) != -1)
+    {
+        if (protocol)
+        {
+            strncpy(protocol, pwrq.u.name, IFNAMSIZ);
+        }
+        close(sock);
+        return 1;
+    }
+    close(sock);
     return 0;
 }
 
-/*List all available network interfaces
-*/
+// List all available network interfaces
 int GET_INTERFACES()
 {
     struct ifaddrs *addresses;
@@ -28,11 +56,13 @@ int GET_INTERFACES()
     }
     address = addresses;
 
-    fprintf(stdout,CYAN("=======")MAGENTA("Available Devices")CYAN("=======")"\n");
+    fprintf(stdout,"\n" CYAN("==========")MAGENTA("Available Devices")CYAN("==========")"\n");
 
     while(address)
     {
         char addr[INET6_ADDRSTRLEN]={};
+        char protocol[IFNAMSIZ]={};
+
         int family = address->ifa_addr->sa_family;      // Get Address Family
         if (family == AF_INET || family == AF_INET6)
         {
@@ -49,7 +79,15 @@ int GET_INTERFACES()
                 struct sockaddr_in6 *in6 = (struct sockaddr_in6*) address->ifa_addr;
                 inet_ntop(AF_INET6, &in6->sin6_addr, addr, sizeof(addr));
             }
-            fprintf(stdout,RED("%s") "\n",addr);
+
+            if (CHECK_WIRELESS(address->ifa_name,protocol))
+            {
+                fprintf(stdout,RED("%s") " (%s)\n",addr,protocol);
+            }
+            else
+            {
+                fprintf(stdout,RED("%s") "\n",addr);
+            }
         }
         address = address->ifa_next;    // Move To The Next Interface
     }
