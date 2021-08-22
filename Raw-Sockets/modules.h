@@ -8,6 +8,7 @@
 #define MAGENTA(string) "\x1b[35m" string "\x1b[0m"
 #define CYAN(string)    "\x1b[36m" string "\x1b[0m"
 
+// Check if given interface is wireless
 int CHECK_WIRELESS(const char* ifname, char* protocol)
 {
     int sock = -1;
@@ -94,4 +95,67 @@ int GET_INTERFACES()
 
     freeifaddrs(addresses);
     return 0;
+}
+
+// Init Socket
+int INIT_SOCKET()
+{
+    sock_raw = socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL));
+    if (sock_raw<0)
+    {
+        fprintf(stderr,"[" RED("-") "] Failed Initializing " RED("Raw Socket") "\n");
+        exit(EXIT_FAILURE); 
+    }
+    fprintf(stdout,"[" GREEN("+") "] Successfully Created " GREEN("Raw Socket") "\n" );
+    return 0;
+}
+
+// Get Index Of The Interface
+int INIT_INTERFACE(char *name)
+{
+    // Zero Out The Buffer
+    memset(&INTERFACE,0,sizeof(INTERFACE));
+
+    // Copy interface name
+    strncpy((char *)INTERFACE.ifr_name,name,IFNAMSIZ);
+    
+    // Retrieve the interface index of the interface into ifr_ifindex
+    if ((ioctl(sock_raw,SIOCGIFINDEX,&INTERFACE))==-1)
+    {
+        fprintf(stderr,"[" RED("-") "] Error Fetching Interface: " RED("%s") "\n",name);
+        GET_INTERFACES();
+        exit(EXIT_FAILURE);
+    }
+    fprintf(stdout,"[" GREEN("+") "] Successfully Indexed " GREEN("%s") "\n",name);
+
+    // Zero Out Structure
+    memset(&sll,0,sizeof(sll));
+    sll.sll_family=AF_PACKET;
+	sll.sll_ifindex=INTERFACE.ifr_ifindex;
+	sll.sll_protocol=htons(ETH_P_ALL);
+
+    return 0;
+}
+
+int INIT_LOGS()
+{
+    logfile = fopen(LOGFILE_NAME,"w");
+    if(logfile==NULL)
+    {
+        fprintf(stderr,"[" RED("-") "] Could Not Open " RED("%s") " For Writing\n",LOGFILE_NAME);
+        return -1;
+    }
+    else
+    {
+        fprintf(stdout,"[" GREEN("+") "] Log File " CYAN("%s") "\n",LOGFILE_NAME);
+        return 0;
+    }
+}
+
+
+void CLEANUP()
+{
+    free(buffer);
+	fclose(logfile);
+	close(sock_raw);
 }

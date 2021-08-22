@@ -9,22 +9,46 @@
 
 int main(int argc, char *argv[])
 {
+	fprintf(stdout,"[" GREEN("+") "] " CYAN("Packet Sniffer") " by " MAGENTA("@whokilleddb")"\n");
+	
 	if(argc != 2)
 	{
-		fprintf(stderr,"[-] "RED("Incorrect Syntax") "\n[+] " YELLOW("Usage") " : %s [interface]\n",argv[0]);
+		fprintf(stderr,"["RED("-")"] "RED("Incorrect Syntax") "\n[+] " YELLOW("Usage") " : %s [interface]\n",argv[0]);
 		GET_INTERFACES();
 		exit(EXIT_FAILURE);
 	}
 
-	//int saddr_size , data_size;
-	//struct sockaddr saddr;
-	//struct in_addr in;
+	// Initialize Raw Socket 
+	INIT_SOCKET();
 
-	unsigned char *buffer = (unsigned char *)malloc(MTU);
-	memset(buffer,0,MTU);
+	// Get Index Of The Interface
+	INIT_INTERFACE(argv[1]);
+
+	// Initialise Log File
+	INIT_LOGS();
+
+	// Variables To Be Used 
+	int saddr_size , data_size;
+	struct sockaddr saddr;
+	struct sockaddr_ll packet_info;
+	int packet_len = sizeof(struct sockaddr_ll);
+
+	// Buffer To Store The Input
+	buffer = (unsigned char *)malloc(65536);
+	if (buffer==NULL)
+	{
+		fprintf(stderr,"[" RED("-") "] " RED("malloc") " Failed\n");;
+	}
+	
 	
 
+	int i=0;
+	while(i<100)
+	{
+		memset(buffer,0,65536);
+		
+	}
 
-	free(buffer);
+	CLEANUP();
 	return 0;
 }
