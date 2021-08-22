@@ -4,13 +4,14 @@
 
    Coded by @whokilleddb
 */
-#include <netinet/in.h>
-#include "modules.h"
+
+#include "packetinfo.h"
 
 int main(int argc, char *argv[])
 {
+	signal(SIGINT, SIGNINT_HANDLER);
 	fprintf(stdout,"[" GREEN("+") "] " CYAN("Packet Sniffer") " by " MAGENTA("@whokilleddb")"\n");
-	
+
 	if(argc != 2)
 	{
 		fprintf(stderr,"["RED("-")"] "RED("Incorrect Syntax") "\n[+] " YELLOW("Usage") " : %s [interface]\n",argv[0]);
@@ -24,14 +25,16 @@ int main(int argc, char *argv[])
 	// Get Index Of The Interface
 	INIT_INTERFACE(argv[1]);
 
+	// Bind Socket
+	BIND_SOCKET();
+
 	// Initialise Log File
 	INIT_LOGS();
+	fprintf(logfile,"[+] Packet Sniffer In C by @whokilleddb\n");
 
 	// Variables To Be Used 
-	int saddr_size , data_size;
-	struct sockaddr saddr;
 	struct sockaddr_ll packet_info;
-	int packet_len = sizeof(struct sockaddr_ll);
+	socklen_t packet_len = sizeof(struct sockaddr_ll);
 
 	// Buffer To Store The Input
 	buffer = (unsigned char *)malloc(65536);
@@ -39,14 +42,19 @@ int main(int argc, char *argv[])
 	{
 		fprintf(stderr,"[" RED("-") "] " RED("malloc") " Failed\n");;
 	}
-	
-	
 
-	int i=0;
-	while(i<100)
+	while(1)
 	{
 		memset(buffer,0,65536);
-		
+		ssize_t len;
+		if((len=recvfrom(sock_raw,buffer,MTU,0,(struct sockaddr*)&packet_info, &packet_len)) == -1)
+		{
+			fprintf(stderr,"["RED("-")"] Function" RED("recvfrom()") " Errored Out\n");
+		}
+		else
+		{
+			PRINT_PACKET_INFO(buffer,len);
+		}		
 	}
 
 	CLEANUP();

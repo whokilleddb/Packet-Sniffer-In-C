@@ -1,12 +1,20 @@
-#include "globals.h"
+#include <stdio.h>	
+#include <stdlib.h>	
+#include <string.h>	
+#include <sys/socket.h>
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <linux/wireless.h>
+#include <arpa/inet.h>
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
+#include <signal.h>
+#include <netinet/in.h>
 
-// Print Colors
-#define RED(string)     "\x1b[31m" string "\x1b[0m"
-#define GREEN(string)   "\x1b[32m" string "\x1b[0m"
-#define YELLOW(string)  "\x1b[33m" string "\x1b[0m"
-#define BLUE(string)    "\x1b[34m" string "\x1b[0m"
-#define MAGENTA(string) "\x1b[35m" string "\x1b[0m"
-#define CYAN(string)    "\x1b[36m" string "\x1b[0m"
+#include "globals.h"
 
 // Check if given interface is wireless
 int CHECK_WIRELESS(const char* ifname, char* protocol)
@@ -130,6 +138,8 @@ int INIT_INTERFACE(char *name)
 
     // Zero Out Structure
     memset(&sll,0,sizeof(sll));
+
+    // Populate Structure
     sll.sll_family=AF_PACKET;
 	sll.sll_ifindex=INTERFACE.ifr_ifindex;
 	sll.sll_protocol=htons(ETH_P_ALL);
@@ -137,6 +147,18 @@ int INIT_INTERFACE(char *name)
     return 0;
 }
 
+// Bind Socket To Interface
+int BIND_SOCKET()
+{
+    if ((bind(sock_raw,(struct  sockaddr *)&sll, sizeof(sll)))==-1)
+    {
+        fprintf(stderr,"[" RED("-") "] Cannot Bind " YELLOW("Raw Socket") " to " RED("%s") "\n",INTERFACE.ifr_name);
+        return -1;
+    }
+    return 0;
+}
+
+// Initiate Logs
 int INIT_LOGS()
 {
     logfile = fopen(LOGFILE_NAME,"w");
@@ -152,10 +174,19 @@ int INIT_LOGS()
     }
 }
 
-
+// Cleanup after done
 void CLEANUP()
 {
+    fprintf(stdout,"[" GREEN("+") "] Wrote Logs To " CYAN("%s") "\n",LOGFILE_NAME);
     free(buffer);
 	fclose(logfile);
 	close(sock_raw);
+}
+
+// Handle SIGINT
+static inline void SIGNINT_HANDLER(int dummy)
+{
+  fprintf(stderr,"\n[+] Received " RED("SIGINT")"\n");
+  CLEANUP();
+  exit(EXIT_FAILURE);
 }
