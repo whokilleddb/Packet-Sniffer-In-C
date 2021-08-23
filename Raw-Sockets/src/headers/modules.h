@@ -1,5 +1,4 @@
-#include <stdio.h>	
-#include <stdlib.h>	
+
 #include <string.h>	
 #include <sys/socket.h>
 #include <netdb.h>
@@ -14,7 +13,8 @@
 #include <signal.h>
 #include <netinet/in.h>
 
-#include "globals.h"
+#include "../globals/functions.h"
+#include "../globals/variables.h"
 
 // Check if given interface is wireless
 int CHECK_WIRELESS(const char* ifname, char* protocol)

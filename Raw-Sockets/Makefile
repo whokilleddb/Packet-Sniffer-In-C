@@ -12,11 +12,13 @@ CFLAGS =  -Wall -Werror -g -O2
 # Build Target Executable
 TARGET = sniffer
 
+# Target Directory
+DIR = src/main
 
 all: $(TARGET)
 
-$(TARGET): $(TARGET).c
-	$(CC)  $(TARGET).c $(CFLAGS) -o sniffer
+$(TARGET): $(DIR)/$(TARGET).c
+	$(CC)  $(DIR)/$(TARGET).c $(CFLAGS) -o sniffer
 
 clean:
 	$(RM) sniffer
