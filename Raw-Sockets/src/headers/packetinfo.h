@@ -1,5 +1,24 @@
 #include "modules.h"
 #include "miscellaneous.h"
+// Print ICMP Packet
+void PRINT_ICMP_PACKET(unsigned char *buffer, int len)
+{
+    struct icmphdr *icmph = (struct icmphdr *)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr));
+    if (len < (sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(icmph)))
+    {
+        INVALID_CAPTURE("ICMP",logfile,stdout);
+    }
+    else
+    {
+        fprintf(stdout,CYAN("------------------")" " MAGENTA("ICMP")" " CYAN("------------------")"\n");
+        fprintf(logfile,"------------------ ICMP ------------------\n");
+
+        fprintf(stdout,CYAN("|-") " " YELLOW("Type") ": " GREEN("%d")" (" BLUE("%s") ")" "\n",(unsigned int)(icmph->type),GET_ICMP_PROTO((unsigned int)(icmph->type)));
+        fprintf(logfile,"|- Type: %d (%s)\n",(unsigned int)(icmph->type),GET_ICMP_PROTO((unsigned int)(icmph->type)));
+
+    }
+}
+
 // Print IP Header
 unsigned int PRINT_IP_PACKET(unsigned char *buffer, int len)
 {
@@ -90,6 +109,7 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
             {
                 case  IPPROTO_ICMP:
                     ++icmp;
+                    PRINT_ICMP_PACKET(buffer,size);
                     break;
                 case IPPROTO_IGMP :
                     ++igmp;
@@ -102,6 +122,10 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
                     break;
                 default:
                     ++others;
+                    fprintf(stdout,CYAN("|-") " " YELLOW("Unsuported Protocol")" " MAGENTA(":(")"\n");
+                    fprintf(logfile,"|- Unsuported Protocol :(\n");
+                    HEX_P(stdout,YELLOW("|-") " " RED("Complete Packet Dump") "\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
+                    HEX_P(logfile,"|- Complete Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
                     break;
             }
         }
@@ -109,18 +133,23 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
         else if (size>=(sizeof(struct ethhdr)+sizeof(struct iphdr)) && (ethernet_header->h_proto)!=8)
         {
             ++others;
+            fprintf(stdout,CYAN("|-") " " YELLOW("Unsuported Protocol")" " MAGENTA(":(")"\n");
+            fprintf(logfile,"|- Unsuported Protocol :(\n");
             HEX_P(stdout,YELLOW("|-") " " RED("Complete Packet Dump") "\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
             HEX_P(logfile,"|- Complete Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
         }
         // Invalid IP Packets
         else
         {
-            INVALID_CAPTURE("IP");
+            ++undefined;
+            INVALID_CAPTURE("IP",logfile,stdout);
         }        
     }
     // Print Invalid Ethernet Packets
     else
     {
-        INVALID_CAPTURE("Ethernet");
+
+        ++undefined;
+        INVALID_CAPTURE("Ethernet",logfile,stdout);
     }
 }

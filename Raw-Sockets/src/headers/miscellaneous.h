@@ -1,4 +1,5 @@
 #include <linux/in.h>
+#include <linux/icmp.h>
 
 char *GET_IP_PROTO(unsigned int proto)
 {
@@ -57,4 +58,58 @@ char *GET_IP_PROTO(unsigned int proto)
         default :
             return "Unknown Protocol";
     }  
+}
+
+char *GET_ICMP_PROTO(unsigned int type)
+{
+    switch(type)
+    {
+        case ICMP_ECHOREPLY	:
+            return "Echo Reply";
+        case  ICMP_DEST_UNREACH :
+            return "Destination Unreachable";
+        case ICMP_SOURCE_QUENCH:
+            return "Source Quench";
+        case ICMP_REDIRECT:
+            return "Redirect";
+        case ICMP_ECHO:
+            return "Echo";
+        case ICMP_TIME_EXCEEDED:
+            return "Time Exceeded";
+        case ICMP_PARAMETERPROB:
+            return "Parameter Problem";
+        case ICMP_TIMESTAMP	:
+            return "Timestamp Request";
+        case ICMP_TIMESTAMPREPLY:
+            return "Timestamp Reply";
+        case ICMP_INFO_REQUEST:
+            return "Information Request";
+        case ICMP_INFO_REPLY:
+            return "Information Reply";
+        case ICMP_ADDRESS:
+            return "Address Mask Request";
+        case ICMP_ADDRESSREPLY:
+            return "Address Mask Reply";
+        default:
+            return "Unknown";
+    }
+}
+
+// Print String In Hex
+void HEX_P(FILE *fd, char *mesg, unsigned char *p, int len)
+{
+    fprintf(fd, mesg);
+    while(len--)
+    {
+        fprintf(fd, "%.2X ",*p);
+        p++;
+    }
+    fprintf(fd, "\n");
+}
+
+// Invalid Packets
+void INVALID_CAPTURE(char *proto, FILE *log, FILE *stream)
+{
+    fprintf(log,"|- Could Not Capture Full %s Packet\n",proto);
+    fprintf(stream,RED("|-")" Could Not Capture Full "RED("%s")" Packet\n",proto);
 }

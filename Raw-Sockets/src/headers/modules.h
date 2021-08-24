@@ -185,11 +185,3 @@ static inline void SIGNINT_HANDLER(int dummy)
   CLEANUP();
   exit(EXIT_FAILURE);
 }
-
-// Invalid Packets
-void INVALID_CAPTURE(char *proto)
-{
-    ++undefined;
-    fprintf(logfile,"|- Could Not Capture Full %s Packet\n",proto);
-    fprintf(stderr,RED("|-")" Could Not Capture Full "RED("%s")" Packet\n",proto);
-}

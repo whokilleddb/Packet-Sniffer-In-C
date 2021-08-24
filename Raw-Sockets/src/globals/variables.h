@@ -24,4 +24,3 @@ struct ifreq INTERFACE;                                // Interface To Sniff On
 struct sockaddr_ll sll;                                // Contain Socket Information
 unsigned char *buffer;                                 // Store Packet Information
 int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,undefined=0;    // 
-//struct sockaddr_in source,dest;
