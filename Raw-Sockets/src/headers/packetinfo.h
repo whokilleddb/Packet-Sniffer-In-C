@@ -1,7 +1,7 @@
 #include "modules.h"
-
+#include "miscellaneous.h"
 // Print IP Header
-void PRINT_IP_PACKET(unsigned char *buffer, int len)
+unsigned int PRINT_IP_PACKET(unsigned char *buffer, int len)
 {
     struct sockaddr_in source, dest;
     memset(&source, 0, sizeof(source));
@@ -23,9 +23,6 @@ void PRINT_IP_PACKET(unsigned char *buffer, int len)
     memset(&dest, 0, sizeof(dest));
     dest.sin_addr.s_addr = iph->daddr;
 
-    fprintf(stdout,CYAN("|-") " " MAGENTA("IP Headers")"\n");
-    fprintf(logfile,"|- IP Headers\n");
-
     fprintf(stdout, CYAN("|-") " " YELLOW("Version") ": " GREEN("IPv%d")"\n",(unsigned int)iph->version);   
     fprintf(logfile, "|- Version: IPv%d\n",(unsigned int)iph->version);       
     
@@ -44,8 +41,8 @@ void PRINT_IP_PACKET(unsigned char *buffer, int len)
     fprintf(stdout,CYAN("|-") " " YELLOW("TTL")": " GREEN("%d")"\n",(unsigned int)iph->ttl);
     fprintf(logfile,"|- TTL: %d\n",(unsigned int)iph->ttl);
 
-    fprintf(stdout,CYAN("|-") " " YELLOW("Protocol") ": " GREEN("%d")"\n",(unsigned int)iph->protocol);
-    fprintf(logfile,"|- Protocol: %d\n",(unsigned int)iph->protocol);
+    fprintf(stdout,CYAN("|-") " " YELLOW("Protocol") ": " GREEN("%d") "(" BLUE("%s") ")" "\n",(unsigned int)iph->protocol,GET_IP_PROTO((unsigned int)iph->protocol));
+    fprintf(logfile,"|- Protocol: %d(%s)\n",(unsigned int)iph->protocol,GET_IP_PROTO((unsigned int)iph->protocol));
     
     fprintf(stdout,CYAN("|-") " " YELLOW("Checksum") ": " GREEN("%d") "\n",ntohs(iph->check));
     fprintf(logfile,"|- Checksum: %d\n",ntohs(iph->check));
@@ -56,6 +53,7 @@ void PRINT_IP_PACKET(unsigned char *buffer, int len)
     fprintf(stdout,CYAN("|-") " " YELLOW("Destination IP")": "GREEN("%s") "\n",inet_ntoa(dest.sin_addr));
     fprintf(logfile,"|- Destination IP: %s\n",inet_ntoa(dest.sin_addr));
 
+    return (unsigned int)iph->protocol;
 }
 
 // Print Information About The Packet
@@ -87,17 +85,33 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
         // Print IP Packet
         if(size>=(sizeof(struct ethhdr)+sizeof(struct iphdr)) && (ethernet_header->h_proto)==8)
         {
+            unsigned int IP_PROTO;
             fprintf(stdout,CYAN("-------------------")" " MAGENTA("IP")" " CYAN("-------------------")"\n");
             fprintf(logfile,"------------------- IP -------------------\n");
-            PRINT_IP_PACKET(buffer,size);
-            
+            IP_PROTO=PRINT_IP_PACKET(buffer,size);
+            switch(IP_PROTO)
+            {
+                case  IPPROTO_ICMP:
+                    ++icmp;
+                    break;
+                case IPPROTO_IGMP :
+                    ++igmp;
+                    break;
+                case  IPPROTO_TCP:
+                    ++tcp;
+                    break;
+                case IPPROTO_UDP:
+                    ++udp;
+                    break;
+                default:
+                    ++others;
+                    break;
+            }
         }
         // Print Un-Supported Protocols
         else if (size>=(sizeof(struct ethhdr)+sizeof(struct iphdr)) && (ethernet_header->h_proto)!=8)
         {
             ++others;
-            fprintf(stdout,YELLOW("|-") " " RED("Protocol Not Supported") "\n");
-            fprintf(logfile,"|- Protocol Not Supported\n");
             
             HEX_P(stdout,YELLOW("|-") " " RED("Complete Packet Dump") "\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
             HEX_P(logfile,"|- Complete Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
