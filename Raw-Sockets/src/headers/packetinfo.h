@@ -20,26 +20,26 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
         // Print To String
         fprintf(stdout,CYAN("|- ") YELLOW("Source Address") " : " GREEN("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X") "\n",ethernet_header->h_source[0],ethernet_header->h_source[1],ethernet_header->h_source[2],ethernet_header->h_source[3],ethernet_header->h_source[4],ethernet_header->h_source[5]);
         fprintf(stdout,CYAN("|- ") YELLOW("Destination Address") " : " GREEN("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X") "\n",ethernet_header->h_dest[0],ethernet_header->h_dest[1],ethernet_header->h_dest[2],ethernet_header->h_dest[3],ethernet_header->h_dest[4],ethernet_header->h_dest[5]);
-        fprintf(stdout,CYAN("|- ") YELLOW("Protocol") " : " GREEN("%s") "\n",ethernet_header->h_proto==8?"IP":"Unidentified");
+        fprintf(stdout,CYAN("|- ") YELLOW("Protocol") " : " GREEN("%s") "\n",ethernet_header->h_proto==8?"IP":ethernet_header->h_proto==ETHERTYPE_ARP?"ARP":ethernet_header->h_proto==IPV6_IDENTIFIER?"IPv6":"Undefined");
 
         // Save To File
         fprintf(logfile,"|- Source Address : %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n",ethernet_header->h_source[0],ethernet_header->h_source[1],ethernet_header->h_source[2],ethernet_header->h_source[3],ethernet_header->h_source[4],ethernet_header->h_source[5]);
         fprintf(logfile,"|- Destination Address : %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n",ethernet_header->h_dest[0],ethernet_header->h_dest[1],ethernet_header->h_dest[2],ethernet_header->h_dest[3],ethernet_header->h_dest[4],ethernet_header->h_dest[5]);
-        fprintf(logfile,"|- Protocol : %s\n",ethernet_header->h_proto==8?"IP":ethernet_header->h_proto==ETHERTYPE_ARP?"ARP":"Unidentified");
+        fprintf(logfile,"|- Protocol : %s\n",ethernet_header->h_proto==8?"IP":ethernet_header->h_proto==ETHERTYPE_ARP?"ARP":(int)ethernet_header->h_proto==IPV6_IDENTIFIER?"IPv6":"Undefined");
 
         if(size>=(sizeof(struct ethhdr)+sizeof(struct iphdr)) && (ethernet_header->h_proto)==8)
         {
-            //struct iphdr *iph=(struct iphdr*)(buffer + sizeof(struct ethhdr));
+          //  struct iphdr *iph=(struct iphdr*)(buffer + sizeof(struct ethhdr));
             
         }
         else
         {
             ++others;
-            fprintf(logfile,"|--- Protocol Not Supported\n");
-            fprintf(stderr,RED("|---") YELLOW(" Protocol Not Supported\n"));
-
-            HEX_P(stdout,RED("|---") " Complete Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
-            HEX_P(logfile,"|--- Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
+            fprintf(stdout,YELLOW("|-") " " RED("Protocol Not Supported") "\n");
+            fprintf(logfile,"|- Protocol Not Supported\n");
+            
+            HEX_P(stdout,YELLOW("|-") " " RED("Complete Packet Dump") "\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
+            HEX_P(logfile,"|- Complete Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
         }
        
         

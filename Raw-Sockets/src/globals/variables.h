@@ -15,7 +15,8 @@
 
 #define MTU 65536
 #define LOGFILE_NAME "sniff.log"
-#define ETHERTYPE_ARP		0x0806
+#define ETHERTYPE_ARP 0x0806
+#define IPV6_IDENTIFIER 56710
 
 int sock_raw;                                          // Socket Descriptor
 FILE *logfile;                                         // Logfile To Store Data
