@@ -1,5 +1,19 @@
 #include <stdio.h>	
 #include <stdlib.h>	
+#include <string.h>	
+#include <sys/socket.h>
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <linux/wireless.h>
+#include <arpa/inet.h>
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
+#include <signal.h>
+#include <netinet/in.h>
+#include <linux/ip.h>
 
 // Print Colors
 #define RED(string)     "\x1b[31m" string "\x1b[0m"

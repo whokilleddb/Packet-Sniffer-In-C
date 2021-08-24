@@ -1,18 +1,3 @@
-
-#include <string.h>	
-#include <sys/socket.h>
-#include <netdb.h>
-#include <ifaddrs.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <linux/wireless.h>
-#include <arpa/inet.h>
-#include <linux/if_packet.h>
-#include <linux/if_ether.h>
-#include <signal.h>
-#include <netinet/in.h>
-
 #include "../globals/functions.h"
 #include "../globals/variables.h"
 
@@ -64,8 +49,7 @@ int GET_INTERFACES()
         return -1;
     }
     address = addresses;
-
-    fprintf(stdout,"\n" CYAN("==========")MAGENTA("Available Devices")CYAN("==========")"\n");
+    fprintf(stdout,"\n"CYAN("==========")MAGENTA(" Available Interfaces ")CYAN("==========")"\n");
 
     while(address)
     {
@@ -177,10 +161,21 @@ int INIT_LOGS()
 // Cleanup after done
 void CLEANUP()
 {
-    fprintf(stdout,"[" GREEN("+") "] Wrote Logs To " CYAN("%s") "\n",LOGFILE_NAME);
+    fprintf(logfile,"\n================= Result =================\n");
+    fprintf(stdout,"\n"CYAN("=================")MAGENTA(" RESULT ")CYAN("=================")"\n");
+    
+    fprintf(stdout,CYAN("|-")" " YELLOW("TCP") ": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("UDP") ": " GREEN("%d")"\n" CYAN("|-")" " YELLOW("ICMP")": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("IGMP")": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("Others")": " GREEN("%d") "\n" CYAN("|-")" " YELLOW("Undefined") ": " GREEN("%d") "\n" CYAN("|-")" " GREEN("Total") ": " GREEN("%d")"\n",tcp,udp,icmp,igmp,others,undefined,total);
+    fprintf(logfile,"|- TCP: %d\n|- UDP: %d\n|- ICMP: %d\n|- IGMP: %d\n|- Others : %d\n|- Undefined: %d\n|- Total : %d\n",tcp,udp,icmp,igmp,others,undefined,total);
+    
+    fprintf(logfile,"==========================================\n");
+    fprintf(stdout,CYAN("==========================================\n"));
+    fprintf(stdout,"[" GREEN("+") "] Wrote Logs To " BLUE("%s") "\n",LOGFILE_NAME);
+
+    
     free(buffer);
 	fclose(logfile);
 	close(sock_raw);
+
 }
 
 // Handle SIGINT
@@ -189,4 +184,12 @@ static inline void SIGNINT_HANDLER(int dummy)
   fprintf(stderr,"\n[+] Received " RED("SIGINT")"\n");
   CLEANUP();
   exit(EXIT_FAILURE);
+}
+
+// Invalid Packets
+void INVALID_CAPTURE(char *proto)
+{
+    ++undefined;
+    fprintf(logfile,"|- Could Not Capture Full %s Packet\n",proto);
+    fprintf(stderr,RED("|-")" Could Not Capture Full "RED("%s")" Packet\n",proto);
 }
