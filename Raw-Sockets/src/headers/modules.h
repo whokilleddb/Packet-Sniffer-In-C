@@ -49,7 +49,7 @@ int GET_INTERFACES()
         return -1;
     }
     address = addresses;
-    fprintf(stdout,"\n"CYAN("==========")MAGENTA(" Available Interfaces ")CYAN("==========")"\n");
+    fprintf(stdout,CYAN("==========")MAGENTA(" Available Interfaces ")CYAN("==========")"\n");
 
     while(address)
     {

@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 	// Initialise Log File
 	INIT_LOGS();
 	fprintf(logfile,"[+] Packet Sniffer In C by @whokilleddb\n");
+	fprintf(logfile,"[+] Sniffing Packets On: %s\n",argv[1]);
 
 	// Variables To Be Used 
 	struct sockaddr_ll packet_info;

@@ -60,10 +60,7 @@ unsigned int PRINT_IP_PACKET(unsigned char *buffer, int len)
 void PRINT_PACKET_INFO(unsigned char* buffer, int size)
 {
     struct ethhdr *ethernet_header;
-    
     ++total;
-
-
     if(size>sizeof(struct ethhdr))
     {
         fprintf(logfile,"\n================= Packet =================\n");
@@ -112,7 +109,6 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
         else if (size>=(sizeof(struct ethhdr)+sizeof(struct iphdr)) && (ethernet_header->h_proto)!=8)
         {
             ++others;
-            
             HEX_P(stdout,YELLOW("|-") " " RED("Complete Packet Dump") "\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
             HEX_P(logfile,"|- Complete Packet Dump\n", (unsigned char*)(buffer+sizeof(struct ethhdr)),size);
         }
