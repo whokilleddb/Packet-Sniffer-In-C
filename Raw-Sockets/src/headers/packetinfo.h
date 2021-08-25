@@ -1,5 +1,33 @@
 #include "modules.h"
 #include "miscellaneous.h"
+
+
+
+// Print TCP Packet
+void PRINT_TCP_PACKET(unsigned char *buffer, int len)
+{
+    struct tcphdr *tcph = (struct tcphdr *)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr));
+    if (len<(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(tcph))) 
+    {
+        INVALID_CAPTURE("TCP",logfile,stdout);
+    }
+    else
+    {
+        fprintf(stdout,CYAN("---------------")" " MAGENTA("TCP Packet")" " CYAN("---------------")"\n");
+        fprintf(logfile,"--------------- TCP Packet ---------------\n");
+
+        fprintf(stdout,CYAN("|-") " " YELLOW("Source Port") ": " GREEN("%u")"\n", ntohs(tcph->source));
+        fprintf(logfile,"|- Source Port: %u\n", ntohs(tcph->source));
+        
+        fprintf(stdout,CYAN("|-") " " YELLOW("Destination Port") ": " GREEN("%u")"\n", ntohs(tcph->dest));
+        fprintf(logfile,"|- Destination Port: %u\n", ntohs(tcph->dest));
+
+
+
+    }
+
+}
+
 // Print ICMP Packet
 void PRINT_ICMP_PACKET(unsigned char *buffer, int len)
 {
@@ -24,9 +52,6 @@ void PRINT_ICMP_PACKET(unsigned char *buffer, int len)
 
         HEX_P(stdout,CYAN("|-") " "YELLOW("Packet Dump") ": \n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)),len);
         HEX_P(logfile,"|- Packet Dump :\n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)),len);
-        
-
-
     }
 }
 
@@ -100,14 +125,14 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
         // Print To String
         fprintf(stdout,CYAN("----------------")" " MAGENTA("Ethernet")" " CYAN("----------------")"\n");
         fprintf(logfile,"---------------- Ethernet ----------------\n");
-        fprintf(stdout,CYAN("|- ") YELLOW("Source Address") " : " GREEN("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X") "\n",ethernet_header->h_source[0],ethernet_header->h_source[1],ethernet_header->h_source[2],ethernet_header->h_source[3],ethernet_header->h_source[4],ethernet_header->h_source[5]);
-        fprintf(stdout,CYAN("|- ") YELLOW("Destination Address") " : " GREEN("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X") "\n",ethernet_header->h_dest[0],ethernet_header->h_dest[1],ethernet_header->h_dest[2],ethernet_header->h_dest[3],ethernet_header->h_dest[4],ethernet_header->h_dest[5]);
-        fprintf(stdout,CYAN("|- ") YELLOW("Protocol") " : " GREEN("%s") "\n",ethernet_header->h_proto==8?"IPv4":ethernet_header->h_proto==ETHERTYPE_ARP?"ARP":ethernet_header->h_proto==IPV6_IDENTIFIER?"IPv6":"Undefined");
+        fprintf(stdout,CYAN("|- ") YELLOW("Source Address") ": " GREEN("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X") "\n",ethernet_header->h_source[0],ethernet_header->h_source[1],ethernet_header->h_source[2],ethernet_header->h_source[3],ethernet_header->h_source[4],ethernet_header->h_source[5]);
+        fprintf(stdout,CYAN("|- ") YELLOW("Destination Address") ": " GREEN("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X") "\n",ethernet_header->h_dest[0],ethernet_header->h_dest[1],ethernet_header->h_dest[2],ethernet_header->h_dest[3],ethernet_header->h_dest[4],ethernet_header->h_dest[5]);
+        fprintf(stdout,CYAN("|- ") YELLOW("Protocol") ": " GREEN("%d") " ("BLUE("%s")")" "\n",ethernet_header->h_proto,GET_ETHER_PROTO((ntohs(ethernet_header->h_proto))));
 
         // Save To File
         fprintf(logfile,"|- Source Address : %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n",ethernet_header->h_source[0],ethernet_header->h_source[1],ethernet_header->h_source[2],ethernet_header->h_source[3],ethernet_header->h_source[4],ethernet_header->h_source[5]);
         fprintf(logfile,"|- Destination Address : %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n",ethernet_header->h_dest[0],ethernet_header->h_dest[1],ethernet_header->h_dest[2],ethernet_header->h_dest[3],ethernet_header->h_dest[4],ethernet_header->h_dest[5]);
-        fprintf(logfile,"|- Protocol : %s\n",ethernet_header->h_proto==8?"IP":ethernet_header->h_proto==ETHERTYPE_ARP?"ARP":(int)ethernet_header->h_proto==IPV6_IDENTIFIER?"IPv6":"Undefined");
+        fprintf(logfile,"|- Protocol : %d (%s)\n",ethernet_header->h_proto,GET_ETHER_PROTO((ntohs(ethernet_header->h_proto))));
 
         // Print IP Packet
         if(size>=(sizeof(struct ethhdr)+sizeof(struct iphdr)) && (ethernet_header->h_proto)==8)
@@ -122,11 +147,9 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
                     ++icmp;
                     PRINT_ICMP_PACKET(buffer,size);
                     break;
-                case IPPROTO_IGMP :
-                    ++igmp;
-                    break;
                 case  IPPROTO_TCP:
                     ++tcp;
+                    PRINT_TCP_PACKET(buffer,size);
                     break;
                 case IPPROTO_UDP:
                     ++udp;

@@ -164,8 +164,8 @@ void CLEANUP()
     fprintf(logfile,"\n================= Result =================\n");
     fprintf(stdout,"\n"CYAN("=================")MAGENTA(" RESULT ")CYAN("=================")"\n");
     
-    fprintf(stdout,CYAN("|-")" " YELLOW("TCP") ": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("UDP") ": " GREEN("%d")"\n" CYAN("|-")" " YELLOW("ICMP")": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("IGMP")": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("Others")": " GREEN("%d") "\n" CYAN("|-")" " YELLOW("Undefined") ": " GREEN("%d") "\n" CYAN("|-")" " GREEN("Total") ": " GREEN("%d")"\n",tcp,udp,icmp,igmp,others,undefined,total);
-    fprintf(logfile,"|- TCP: %d\n|- UDP: %d\n|- ICMP: %d\n|- IGMP: %d\n|- Others : %d\n|- Undefined: %d\n|- Total : %d\n",tcp,udp,icmp,igmp,others,undefined,total);
+    fprintf(stdout,CYAN("|-")" " YELLOW("TCP") ": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("UDP") ": " GREEN("%d")"\n" CYAN("|-")" " YELLOW("ICMP")": " GREEN("%d") "\n" CYAN("|-")" "YELLOW("Others")": " GREEN("%d") "\n" CYAN("|-")" " YELLOW("Undefined") ": " GREEN("%d") "\n" CYAN("|-")" " GREEN("Total") ": " GREEN("%d")"\n",tcp,udp,icmp,others,undefined,total);
+    fprintf(logfile,"|- TCP: %d\n|- UDP: %d\n|- ICMP: %d\n|- Others : %d\n|- Undefined: %d\n|- Total : %d\n",tcp,udp,icmp,others,undefined,total);
     
     fprintf(logfile,"==========================================\n");
     fprintf(stdout,CYAN("==========================================\n"));

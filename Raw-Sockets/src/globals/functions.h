@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <linux/ip.h>
 #include <linux/icmp.h>
+#include <linux/tcp.h>
 
 // Print Colors
 #define RED(string)     "\x1b[31m" string "\x1b[0m"
