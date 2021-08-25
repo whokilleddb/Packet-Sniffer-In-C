@@ -181,7 +181,7 @@ void CLEANUP()
 // Handle SIGINT
 static inline void SIGNINT_HANDLER(int dummy)
 {
-  fprintf(stderr,"\n[+] Received " RED("SIGINT")"\n");
+  fprintf(stderr,"\n["RED("-")"] Received " RED("SIGINT")"\n");
   CLEANUP();
   exit(EXIT_FAILURE);
 }

@@ -75,7 +75,7 @@ char *GET_ICMP_PROTO(unsigned int type)
         case ICMP_ECHO:
             return "Echo";
         case ICMP_TIME_EXCEEDED:
-            return "Time Exceeded";
+            return "TTL Expired";
         case ICMP_PARAMETERPROB:
             return "Parameter Problem";
         case ICMP_TIMESTAMP	:
@@ -98,13 +98,39 @@ char *GET_ICMP_PROTO(unsigned int type)
 // Print String In Hex
 void HEX_P(FILE *fd, char *mesg, unsigned char *p, int len)
 {
-    fprintf(fd, mesg);
-    while(len--)
-    {
-        fprintf(fd, "%.2X ",*p);
-        p++;
-    }
-    fprintf(fd, "\n");
+    int i,j;
+    for(i=0 ; i < len ; i++)
+	{
+		if( i!=0 && i%16==0)   //if one line of hex printing is complete...
+		{
+			fprintf(fd,"    "); // Spaces in between
+			for(j=i-16 ; j<i ; j++)
+			{
+				if(p[j]>=32 && p[j]<=128)
+					fprintf(fd,"%c",(unsigned char)p[j]); //if its a number or alphabet
+				
+				else fprintf(fd,"."); //otherwise print a dot
+			}
+			fprintf(fd,"\n");
+		} 
+
+    	//if(i%16==0) fprintf(fd,""); // Prepending Spaces
+		fprintf(fd," %02X",(unsigned int)p[i]);
+				
+		if( i==len-1)  //print the last spaces
+		{
+			for(j=0;j<15-i%16;j++) fprintf(fd,"   "); //extra spaces
+			
+			fprintf(fd,"    ");
+			
+			for(j=i-i%16 ; j<=i ; j++)
+			{
+				if(p[j]>=32 && p[j]<=128) fprintf(fd,"%c",(unsigned char)p[j]);
+				else fprintf(fd,".");
+			}
+			fprintf(fd,"\n");
+		}
+	}
 }
 
 // Invalid Packets

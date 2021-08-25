@@ -13,8 +13,19 @@ void PRINT_ICMP_PACKET(unsigned char *buffer, int len)
         fprintf(stdout,CYAN("------------------")" " MAGENTA("ICMP")" " CYAN("------------------")"\n");
         fprintf(logfile,"------------------ ICMP ------------------\n");
 
-        fprintf(stdout,CYAN("|-") " " YELLOW("Type") ": " GREEN("%d")" (" BLUE("%s") ")" "\n",(unsigned int)(icmph->type),GET_ICMP_PROTO((unsigned int)(icmph->type)));
+        fprintf(stdout,CYAN("|-") " " YELLOW("Type") ": " GREEN("%d") " (" BLUE("%s") ")" "\n",(unsigned int)(icmph->type),GET_ICMP_PROTO((unsigned int)(icmph->type)));
         fprintf(logfile,"|- Type: %d (%s)\n",(unsigned int)(icmph->type),GET_ICMP_PROTO((unsigned int)(icmph->type)));
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Code") ": " GREEN("%d") "\n", (unsigned int)(icmph->code));
+        fprintf(logfile,"|- Code: %d\n", (unsigned int)(icmph->code));        
+
+        fprintf(stdout,CYAN("|-") " " YELLOW("Checksum") ": " GREEN("%d") "\n",ntohs(icmph->checksum));
+        fprintf(logfile,"|- Checksum : %d\n",ntohs(icmph->checksum));
+
+        HEX_P(stdout,CYAN("|-") " "YELLOW("Packet Dump") ": \n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)),len);
+        HEX_P(logfile,"|- Packet Dump :\n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)),len);
+        
+
 
     }
 }
@@ -60,8 +71,8 @@ unsigned int PRINT_IP_PACKET(unsigned char *buffer, int len)
     fprintf(stdout,CYAN("|-") " " YELLOW("TTL")": " GREEN("%d")"\n",(unsigned int)iph->ttl);
     fprintf(logfile,"|- TTL: %d\n",(unsigned int)iph->ttl);
 
-    fprintf(stdout,CYAN("|-") " " YELLOW("Protocol") ": " GREEN("%d") "(" BLUE("%s") ")" "\n",(unsigned int)iph->protocol,GET_IP_PROTO((unsigned int)iph->protocol));
-    fprintf(logfile,"|- Protocol: %d(%s)\n",(unsigned int)iph->protocol,GET_IP_PROTO((unsigned int)iph->protocol));
+    fprintf(stdout,CYAN("|-") " " YELLOW("Protocol") ": " GREEN("%d") " (" BLUE("%s") ")" "\n",(unsigned int)iph->protocol,GET_IP_PROTO((unsigned int)iph->protocol));
+    fprintf(logfile,"|- Protocol: %d (%s)\n",(unsigned int)iph->protocol,GET_IP_PROTO((unsigned int)iph->protocol));
     
     fprintf(stdout,CYAN("|-") " " YELLOW("Checksum") ": " GREEN("%d") "\n",ntohs(iph->check));
     fprintf(logfile,"|- Checksum: %d\n",ntohs(iph->check));
