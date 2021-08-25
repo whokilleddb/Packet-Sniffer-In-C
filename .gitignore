@@ -1,0 +1,12 @@
+# Executables
+sniffer
+
+# Test Files
+*test*
+a.out
+
+# VSCode files
+.vscode/
+
+# Log Files
+*.log
