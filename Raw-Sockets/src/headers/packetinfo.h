@@ -1,8 +1,6 @@
 #include "modules.h"
 #include "miscellaneous.h"
 
-
-
 // Print TCP Packet
 void PRINT_TCP_PACKET(unsigned char *buffer, int len)
 {
@@ -22,10 +20,52 @@ void PRINT_TCP_PACKET(unsigned char *buffer, int len)
         fprintf(stdout,CYAN("|-") " " YELLOW("Destination Port") ": " GREEN("%u")"\n", ntohs(tcph->dest));
         fprintf(logfile,"|- Destination Port: %u\n", ntohs(tcph->dest));
 
+        fprintf(stdout,CYAN("|-") " " YELLOW("Sequence Number") ": " GREEN("%u") "\n",ntohl(tcph->seq));
+        fprintf(logfile,"|- Sequence Number: %u\n",ntohl(tcph->seq));
+        
+        fprintf(stdout,CYAN("|-") " " YELLOW("Acknowledge Number") ": " GREEN("%u")"\n",ntohl(tcph->ack_seq));
+        fprintf(logfile,"|- Acknowledge Number: %u\n",ntohl(tcph->ack_seq));
+
+        fprintf(stdout,CYAN("|-")" " YELLOW("TCP Header Length") ": " GREEN("%d") " " BLUE("DWORDS") " " YELLOW("or") " " GREEN("%d") " " BLUE("Bytes") "\n",(unsigned int)tcph->doff,(unsigned int)tcph->doff*4);
+        fprintf(logfile,"|- TCP Header Length  : %d DWORDS or %d Bytes\n",(unsigned int)tcph->doff,(unsigned int)tcph->doff*4);  
+   
+        fprintf(stdout,CYAN("|-") " " YELLOW("CWR Flag") ":    "GREEN("%d")"\n",(unsigned int)tcph->cwr);
+        fprintf(logfile,"|- CWR Flag:    %d\n",(unsigned int)tcph->cwr);
+
+        fprintf(stdout,CYAN("|-") " " YELLOW("ECN Flag") ":    "GREEN("%d")"\n",(unsigned int)tcph->ece);
+        fprintf(logfile,"|- ECN Flag:    %d\n",(unsigned int)tcph->ece);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Urgent Flag") ": "GREEN("%d")"\n",(unsigned int)tcph->urg);
+        fprintf(logfile,"|- Urgent Flag: %d\n",(unsigned int)tcph->urg);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Ack Flag") ":    "GREEN("%d")"\n",(unsigned int)tcph->ack);
+        fprintf(logfile,"|- Ack Flag:    %d\n",(unsigned int)tcph->ack);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Push Flag") ":   "GREEN("%d")"\n",(unsigned int)tcph->psh);
+        fprintf(logfile,"|- Push Flag:   %d\n",(unsigned int)tcph->psh);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Reset Flag") ":  "GREEN("%d")"\n",(unsigned int)tcph->rst);
+        fprintf(logfile,"|- Reset Flag:  %d\n",(unsigned int)tcph->rst);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Syn Flag") ":    "GREEN("%d")"\n",(unsigned int)tcph->syn);
+        fprintf(logfile,"|- Syn Flag:    %d\n",(unsigned int)tcph->syn);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Fin Flag") ":    "GREEN("%d")"\n",(unsigned int)tcph->fin);
+        fprintf(logfile,"|- Fin Flag:    %d\n",(unsigned int)tcph->fin);
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Window") ": "GREEN("%d")"\n",(unsigned int)tcph->window);
+        fprintf(logfile,"|- Window: %d\n",ntohs(tcph->window));
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Checksum") ": "GREEN("%d")"\n",(unsigned int)tcph->check);
+        fprintf(logfile,"|- Checksum: %d\n",ntohs(tcph->check));
+
+        fprintf(stdout,CYAN("|-") " "YELLOW("Urgent Pointer") ": "GREEN("%d")"\n",(unsigned int)tcph->urg_ptr);
+        fprintf(logfile,"|- Urgent Pointer: %d\n",tcph->urg_ptr);
 
 
+        HEX_P(stdout,CYAN("|-") " "YELLOW("Payload") ": \n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(tcph)),len);
+        HEX_P(logfile,"|- Payload:\n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(tcph)),len);
     }
-
 }
 
 // Print ICMP Packet
