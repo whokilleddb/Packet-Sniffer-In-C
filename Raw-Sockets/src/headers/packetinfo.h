@@ -153,7 +153,7 @@ unsigned int PRINT_IP_PACKET(unsigned char *buffer, int len)
     
     fprintf(stdout,CYAN("|-")" " YELLOW("IP Header Length") ": " GREEN("%d") " " BLUE("DWORDS") " " YELLOW("or") " " GREEN("%d") " " BLUE("Bytes") "\n",(unsigned int)iph->ihl,((unsigned int)(iph->ihl))*4);
     fprintf(logfile,"|- IP Header Length  : %d DWORDS or %d Bytes\n",(unsigned int)iph->ihl,((unsigned int)(iph->ihl))*4);
-
+  
 	fprintf(stdout,CYAN("|-") " " YELLOW("Type Of Service") ": " GREEN("%d") "\n",(unsigned int)iph->tos);
 	fprintf(logfile,"|- Type Of Service   : %d\n",(unsigned int)iph->tos);
 
