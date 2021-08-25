@@ -1,6 +1,37 @@
 #include "modules.h"
 #include "miscellaneous.h"
 
+
+// Print UDP Packet
+void PRINT_UDP_PACKET(unsigned char *buffer, int len)
+{
+    struct udphdr *udph = (struct udphdr *)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr));
+    if (len<(sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(udph))) 
+    {
+        INVALID_CAPTURE("UDP",logfile,stdout);
+    }
+    else
+    {
+        fprintf(stdout,CYAN("---------------")" " MAGENTA("UDP Packet")" " CYAN("---------------")"\n");
+        fprintf(logfile,"--------------- UDP Packet ---------------\n");
+
+        fprintf(stdout,CYAN("|-") " " YELLOW("Source Port") ": " GREEN("%u")"\n", ntohs(udph->source));
+        fprintf(logfile,"|- Source Port: %u\n", ntohs(udph->source));
+        
+        fprintf(stdout,CYAN("|-") " " YELLOW("Destination Port") ": " GREEN("%u")"\n", ntohs(udph->dest));
+        fprintf(logfile,"|- Destination Port: %u\n", ntohs(udph->dest));
+
+        fprintf(stdout,CYAN("|-") " " YELLOW("UDP Length") ": " GREEN("%u") "\n",ntohs(udph->len));
+        fprintf(logfile,"|- UDP Length: %u\n",ntohs(udph->len));
+        
+        fprintf(stdout,CYAN("|-") " " YELLOW("UDP Checksum") ": " GREEN("%u")"\n",ntohs(udph->check));
+        fprintf(logfile,"|- UDP Checksum: %u\n",ntohs(udph->check));
+
+        HEX_P(stdout,CYAN("|-") " "YELLOW("Payload") ": \n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(udph)),len);
+        HEX_P(logfile,"|- Payload:\n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(udph)),len);
+    }
+}
+
 // Print TCP Packet
 void PRINT_TCP_PACKET(unsigned char *buffer, int len)
 {
@@ -61,7 +92,6 @@ void PRINT_TCP_PACKET(unsigned char *buffer, int len)
 
         fprintf(stdout,CYAN("|-") " "YELLOW("Urgent Pointer") ": "GREEN("%d")"\n",(unsigned int)tcph->urg_ptr);
         fprintf(logfile,"|- Urgent Pointer: %d\n",tcph->urg_ptr);
-
 
         HEX_P(stdout,CYAN("|-") " "YELLOW("Payload") ": \n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(tcph)),len);
         HEX_P(logfile,"|- Payload:\n",(unsigned char*)(buffer+sizeof(struct ethhdr)+sizeof(struct iphdr)+sizeof(tcph)),len);
@@ -193,6 +223,7 @@ void PRINT_PACKET_INFO(unsigned char* buffer, int size)
                     break;
                 case IPPROTO_UDP:
                     ++udp;
+                    PRINT_UDP_PACKET(buffer,size);
                     break;
                 default:
                     ++others;
