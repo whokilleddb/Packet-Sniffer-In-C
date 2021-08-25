@@ -243,7 +243,7 @@ char *GET_ICMP_PROTO(unsigned int type)
 // Print String In Hex
 void HEX_P(FILE *fd, char *mesg, unsigned char *p, int len)
 {
-    fprintf(fd,mesg);
+    fprintf(fd,"%s",mesg);
     int i,j;
     for(i=0 ; i < len ; i++)
 	{

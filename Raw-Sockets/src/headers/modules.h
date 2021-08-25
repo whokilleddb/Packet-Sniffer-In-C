@@ -1,5 +1,5 @@
-#include "../globals/functions.h"
-#include "../globals/variables.h"
+#include "functions.h"
+#include "variables.h"
 
 // Check if given interface is wireless
 int CHECK_WIRELESS(const char* ifname, char* protocol)

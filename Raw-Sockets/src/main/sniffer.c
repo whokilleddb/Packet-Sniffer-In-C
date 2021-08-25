@@ -5,7 +5,7 @@
    Coded by @whokilleddb
 */
 
-#include "../headers/packetinfo.h"
+#include "packetinfo.h"
 
 int main(int argc, char *argv[])
 {

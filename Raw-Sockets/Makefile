@@ -1,13 +1,21 @@
 # Compiler : GCC 
 CC = gcc
 
+# HEADER Files
+HEADERS = src/headers
+
+# Global Files
+GLOBALS = src/globals
+
 # Compiler Flags:
-# -lcurl : Link Against libcurl
 # -O2 : Optimazation level
 # -Wall : Print All Warnings 
 # -Werror : Convert All Warnings Into Errors
 # -g : Add Debugging Symbols
-CFLAGS =  -Wall -Werror -g -O2 
+# -I : Directory containing headers
+# -pipe : Avoid temporary files, speeding up builds
+# -Os : Optimize Size
+CFLAGS =  -Wall -Werror -g -O2 -I $(HEADERS) -I $(GLOBALS) -pipe -Os
 
 # Build Target Executable
 TARGET = sniffer
