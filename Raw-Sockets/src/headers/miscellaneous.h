@@ -2,27 +2,27 @@
 #include <linux/icmp.h>
 
 #ifndef ETH_P_PREAUTH
-#define ETH_P_PREAUTH -1
+#define ETH_P_PREAUTH 0x88C7	
 #endif 
 
 #ifndef ETH_P_LLDP
-#define ETH_P_LLDP -1
+#define ETH_P_LLDP 0x88CC
 #endif 
 
-#ifndef ETH_P_MRP
-#define ETH_P_MRP -1
+#ifndef ETH_P_MRP    
+#define ETH_P_MRP  0x88E3  
 #endif 
 
 #ifndef ETH_P_CFM
-#define ETH_P_CFM -1
+#define ETH_P_CFM 0x8902
 #endif 
 
 #ifndef ETH_P_DSA_8021Q
-#define ETH_P_DSA_8021Q -1
+#define ETH_P_DSA_8021Q 0xDADB
 #endif 
 
 #ifndef ETH_P_ERSPAN2
-#define ETH_P_ERSPAN2 -1
+#define ETH_P_ERSPAN2 0x22EB
 #endif 
 
 char *GET_ETHER_PROTO(uint16_t proto)
