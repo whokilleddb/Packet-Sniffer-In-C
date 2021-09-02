@@ -15,8 +15,8 @@ GLOBALS = src/globals
 # -I : Directory containing headers
 # -pipe : Avoid temporary files, speeding up builds
 # -Os : Optimize Size
-# -v : Verbose
-CFLAGS =  -Wall -Werror -g -O2 -I $(HEADERS) -I $(GLOBALS) -pipe -Os -v
+
+CFLAGS =  -Wall -Werror -g -O2 -I $(HEADERS) -I $(GLOBALS) -pipe -Os 
 
 # Build Target Executable
 TARGET = sniffer
