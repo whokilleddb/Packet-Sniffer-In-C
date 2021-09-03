@@ -72,7 +72,7 @@ _PS: This Program Requires Super User Privileges To Run_
 
 ## Cross Compiling 
 
-### For Mips
+### For Mips32
 
 Compiler: `mips-linux-gnu-gcc`
 
@@ -80,7 +80,7 @@ Compile statement:
 ```bash
 $ mips-linux-gnu-gcc src/main/sniffer.c -Wall -Werror -O2 -I src/headers -I src/globals -pipe -Os -o sniffer-mips 
 ```
-### For Mipsel
+### For Mipsel32
 
 Compiler
 
