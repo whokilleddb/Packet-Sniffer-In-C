@@ -25,6 +25,23 @@
 #define ETH_P_ERSPAN2 0x22EB
 #endif 
 
+#ifndef ETH_P_ERSPAN
+#define ETH_P_ERSPAN 0x88BE
+#endif
+
+#ifndef ETH_P_IBOE
+#define ETH_P_IBOE 0x8915
+#endif
+
+#ifndef ETH_P_NSH
+#define ETH_P_NSH 0x894F 
+#endif
+
+#ifndef ETH_P_IFE
+#define ETH_P_IFE 0xED3E
+#endif
+
+
 char *GET_ETHER_PROTO(uint16_t proto)
 {
     switch(proto)
